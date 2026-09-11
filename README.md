@@ -4,8 +4,11 @@
 [![React](https://img.shields.io/badge/Frontend-React_18-61DAFB?style=flat&logo=react&logoColor=black)](https://react.dev)
 [![Google Gemini](https://img.shields.io/badge/AI-Google_Gemini_3.1-4285F4?style=flat&logo=google&logoColor=white)](https://aistudio.google.com)
 [![Docker](https://img.shields.io/badge/Deploy-Docker-2496ED?style=flat&logo=docker&logoColor=white)](https://docker.com)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-Render-46E3B7?style=flat&logo=render&logoColor=white)](https://scholarmind-knum.onrender.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+> 🌐 **Live Demo:** [https://scholarmind-knum.onrender.com/](https://scholarmind-knum.onrender.com/)
+>
 > **ScholarMind** is an adaptive, goal-aware AI Learning Tutor designed to champion **UN Sustainable Development Goal 4: Quality Education (SDG 4)**. Powered by Google Gemini, FastAPI, React 18, and ChromaDB, ScholarMind delivers personalized learning pacing, structured assessments, generative visual feedback, and a state-of-the-art 3-tier memory hierarchy.
 
 ---
@@ -175,6 +178,8 @@ python run.py
 ## 🚀 Free Deployment Guide
 
 Deploy ScholarMind 100% free on **Render.com**:
+- **Live Production URL:** [https://scholarmind-knum.onrender.com/](https://scholarmind-knum.onrender.com/)
+
 1. Push this repository to GitHub.
 2. Log into [Render.com](https://render.com) and click **New +** → **Blueprint**.
 3. Select this repository. Render automatically reads `render.yaml`.
