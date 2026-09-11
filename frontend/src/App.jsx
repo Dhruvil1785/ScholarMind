@@ -28,8 +28,20 @@ function useRestChat() {
   // Persistent session_id so multi-turn history works across sends
   const sessionRef = React.useRef(state.sessionId || newId())
 
+  useEffect(() => {
+    if (state.sessionId) {
+      sessionRef.current = state.sessionId
+    }
+  }, [state.sessionId])
+
   const sendMessage = useCallback(async (text) => {
     if (!text || isGenerating) return
+
+    const activeSid = state.sessionId || sessionRef.current || newId()
+    sessionRef.current = activeSid
+    if (state.sessionId !== activeSid) {
+      dispatch({ type: Actions.SET_SESSION, sessionId: activeSid })
+    }
 
     const userMsgId = newId()
     const asstMsgId = newId()
@@ -52,7 +64,7 @@ function useRestChat() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: text,
-          session_id: sessionRef.current,
+          session_id: activeSid,
           model: state.model || 'gemini-3.1-flash-lite',
         }),
       })
@@ -61,8 +73,12 @@ function useRestChat() {
         throw new Error(`HTTP ${res.status}: ${err}`)
       }
       const data = await res.json()
-      // Store the session_id the server assigned (in case it was ephemeral)
-      sessionRef.current = data.session_id
+      if (data.session_id) {
+        sessionRef.current = data.session_id
+        if (state.sessionId !== data.session_id) {
+          dispatch({ type: Actions.SET_SESSION, sessionId: data.session_id })
+        }
+      }
 
       dispatch({
         type: Actions.UPDATE_MESSAGE,
@@ -79,9 +95,9 @@ function useRestChat() {
     } finally {
       setIsGenerating(false)
     }
-  }, [isGenerating, dispatch, newId])
+  }, [isGenerating, dispatch, newId, state.sessionId, state.model])
 
-  return { isGenerating, sendMessage }
+  return { isGenerating, sendMessage, currentSessionId: sessionRef.current || state.sessionId }
 }
 
 function ChatLayout() {
@@ -98,7 +114,7 @@ function ChatLayout() {
   } = useChatSocket()
 
   // REST hook — mandatory judging path
-  const { isGenerating: restGenerating, sendMessage: restSendMessage } = useRestChat()
+  const { isGenerating: restGenerating, sendMessage: restSendMessage, currentSessionId } = useRestChat()
 
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [memoryModalOpen, setMemoryModalOpen] = useState(false)
@@ -171,7 +187,7 @@ function ChatLayout() {
         <MemoryModal
           isOpen={memoryModalOpen}
           onClose={() => setMemoryModalOpen(false)}
-          sessionId={state.sessionId}
+          sessionId={state.sessionId || currentSessionId}
         />
       </div>
     </div>

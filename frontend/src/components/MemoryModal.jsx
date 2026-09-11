@@ -18,15 +18,15 @@ export default function MemoryModal({ isOpen, onClose, sessionId }) {
   const [activeTab, setActiveTab] = useState('turns') // 'turns' | 'facts' | 'ingest'
 
   const fetchMemory = useCallback(async () => {
-    if (!sessionId) return
+    const sid = sessionId || 'default'
     setLoading(true)
     try {
-      const res = await fetch(`/api/session/${sessionId}/memory`)
+      const res = await fetch(`/api/session/${sid}/memory`)
       if (res.ok) {
         const data = await res.json()
         setTurns(data.turns || [])
-        setFacts(data.facts || [])
-        setTokenUsage(data.token_count || (data.turns ? data.turns.length * 150 : 0))
+        setFacts(data.learned_facts || data.facts || [])
+        setTokenUsage(data.token_estimate ?? data.token_count ?? (data.turns ? data.turns.length * 150 : 0))
       }
     } catch (_) {
       // Non-critical
@@ -183,7 +183,10 @@ export default function MemoryModal({ isOpen, onClose, sessionId }) {
             Working Turns ({turns.length})
           </button>
           <button
-            onClick={() => setActiveTab('facts')}
+            onClick={() => {
+              setActiveTab('facts')
+              fetchMemory()
+            }}
             className={`pb-2 border-b-2 transition-all cursor-pointer ${
               activeTab === 'facts'
                 ? 'border-blue-600 text-blue-600 dark:text-blue-400 font-semibold'
@@ -238,12 +241,17 @@ export default function MemoryModal({ isOpen, onClose, sessionId }) {
                   No episodic facts learned for this session yet.
                 </div>
               ) : (
-                facts.map((fact, idx) => (
-                  <div key={idx} className="flex items-start gap-2 p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-300">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
-                    <span>{typeof fact === 'string' ? fact : fact.text || JSON.stringify(fact)}</span>
-                  </div>
-                ))
+                facts.map((fact, idx) => {
+                  const factText = typeof fact === 'string'
+                    ? fact
+                    : (fact.fact || fact.text || fact.content || JSON.stringify(fact))
+                  return (
+                    <div key={idx} className="flex items-start gap-2 p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-300">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
+                      <span className="font-sans leading-relaxed">{factText}</span>
+                    </div>
+                  )
+                })
               )}
             </div>
           )}

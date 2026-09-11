@@ -37,9 +37,20 @@ try:
 except Exception:
     pass
 
+from pathlib import Path
+import os
+
 def _make_chroma_client() -> chromadb.ClientAPI:
+    persist_dir = cfg.chroma_persist_dir
+    if not os.path.isabs(persist_dir):
+        backend_dir = Path(__file__).resolve().parents[2]
+        candidate = backend_dir / "chroma_store"
+        if candidate.exists():
+            persist_dir = str(candidate)
+        else:
+            persist_dir = str(backend_dir.parent / "chroma_store")
     return chromadb.PersistentClient(
-        path=cfg.chroma_persist_dir,
+        path=persist_dir,
         settings=ChromaSettings(anonymized_telemetry=False),
     )
 
@@ -91,13 +102,27 @@ class LongTermMemory:
         embedding: List[float],
     ) -> None:
         """Persist a discovered user preference or factual detail."""
+        ts = time.time()
+        # 1. Store in session-specific collection
         col = self._get_or_create(self._collection_name(session_id))
         col.upsert(
             ids=[str(uuid.uuid4())],
             embeddings=[embedding],
             documents=[fact],
-            metadatas=[{"type": "learned_fact", "ts": time.time()}],
+            metadatas=[{"type": "learned_fact", "ts": ts}],
         )
+        # 2. Mirror into user_profile_facts so facts persist across new sessions
+        try:
+            profile_col = self._get_or_create("user_profile_facts")
+            profile_col.upsert(
+                ids=[str(uuid.uuid4())],
+                embeddings=[embedding],
+                documents=[fact],
+                metadatas=[{"type": "learned_fact", "session_id": session_id, "ts": ts}],
+            )
+        except Exception as p_err:
+            logger.debug("long_term.profile_col_upsert: %s", p_err)
+
         logger.info("long_term.stored_fact: session_id=%s, fact=%s", session_id, fact[:50])
 
     def retrieve(
@@ -136,21 +161,41 @@ class LongTermMemory:
         query_embedding: List[float],
         k: int = 3,
     ) -> List[Dict[str, Any]]:
-        return self.retrieve(self._collection_name(session_id), query_embedding, k)
+        session_items = self.retrieve(self._collection_name(session_id), query_embedding, k)
+        profile_items = self.retrieve("user_profile_facts", query_embedding, k)
+        # Merge and deduplicate by text
+        seen = set()
+        combined = []
+        for item in session_items + profile_items:
+            t = item.get("text")
+            if t and t not in seen:
+                seen.add(t)
+                combined.append(item)
+        return combined[:k]
 
     def get_session_facts(self, session_id: str) -> List[Dict[str, Any]]:
-        """Return all stored learned facts for this session."""
-        try:
-            col = self._get_or_create(self._collection_name(session_id))
-            data = col.get(include=["documents", "metadatas"])
-            facts = []
-            if data and data.get("documents"):
-                for doc, meta in zip(data["documents"], data["metadatas"]):
-                    facts.append({"fact": doc, "metadata": meta})
-            return facts
-        except Exception as exc:
-            logger.warning("long_term.get_session_facts_failed: %s", exc)
-            return []
+        """Return all stored learned facts for this session and user profile."""
+        facts = []
+        seen_texts = set()
+
+        def _collect(col_name: str):
+            try:
+                col = self._get_or_create(col_name)
+                data = col.get(include=["documents", "metadatas"])
+                if data and data.get("documents"):
+                    for doc, meta in zip(data["documents"], data["metadatas"]):
+                        if doc and doc not in seen_texts:
+                            seen_texts.add(doc)
+                            facts.append({"fact": doc, "text": doc, "metadata": meta})
+            except Exception as e:
+                logger.debug("get_session_facts._collect err: %s", e)
+
+        # 1. Session-specific facts
+        _collect(self._collection_name(session_id))
+        # 2. General user profile facts
+        _collect("user_profile_facts")
+
+        return facts
 
     def count_knowledge_chunks(self, collection_name: str = "goal_knowledge") -> int:
         try:

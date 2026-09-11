@@ -23,6 +23,7 @@ from backend.app.memory.working_memory import WorkingMemory
 from backend.app.memory.long_term import LongTermMemory
 from backend.app.schemas.chat import MessageRole
 from backend.app.tools.registry import execute_tool, get_gemini_tool_declarations
+from backend.app.routes.tutor import _maybe_store_fact
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -83,6 +84,9 @@ async def chat_ws(
                     continue
 
                 wm.ensure_session(session_id)
+
+                # Store user fact if applicable
+                _maybe_store_fact(user_text=user_text, session_id=session_id, gemini=gemini, ltm=ltm)
 
                 # 1. Retrieve relevant chunks from long-term memory
                 retrieved_chunks: list[dict] = []

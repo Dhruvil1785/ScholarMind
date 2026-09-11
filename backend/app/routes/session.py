@@ -71,15 +71,21 @@ async def get_session_memory(
     Inspector endpoint for Tier 1 Working Memory and Tier 3 Learned Facts.
     Used by the Memory Modal.
     """
-    turns = wm.get_turns(session_id)
+    active_id = session_id
+    if not active_id or active_id in ("null", "undefined", ""):
+        active_sessions = wm.list_sessions()
+        active_id = active_sessions[0] if active_sessions else "default"
+
+    turns = wm.get_turns(active_id)
     total_tokens = sum(t.token_estimate for t in turns)
-    facts = ltm.get_session_facts(session_id)
+    facts = ltm.get_session_facts(active_id)
 
     return {
-        "session_id": session_id,
+        "session_id": active_id,
         "turn_count": len(turns),
         "max_turns": wm.max_turns,
         "token_estimate": total_tokens,
+        "token_count": total_tokens,
         "token_budget": wm.token_budget,
         "turns": [
             {
@@ -91,6 +97,7 @@ async def get_session_memory(
             for t in turns
         ],
         "learned_facts": facts,
+        "facts": facts,
     }
 
 
