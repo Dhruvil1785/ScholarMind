@@ -1,19 +1,20 @@
-# NextGen AI Chatbot — Free Deployment Guide
+# 🚀 ScholarMind — Free Deployment Guide
 
-> **Production Deployment Handbook for Full-Stack FastAPI + React 18 + Gemini Multimodal Agent**  
-> Complete step-by-step instructions to host your chatbot **100% free** without requiring paid cloud subscriptions or upfront credit cards.
+> **Production Deployment Handbook for Full-Stack FastAPI + React 18 + Gemini AI Learning Tutor**  
+> Complete step-by-step instructions to host ScholarMind **100% free** without requiring paid cloud subscriptions or upfront credit cards.
 
 ---
 
 ## 1. Architecture & Deployment Strategy
 
-Before deploying, it is crucial to understand how this application communicates:
+Before deploying, it is crucial to understand how ScholarMind communicates:
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
 │                        User Browser (HTTPS / WSS)                      │
 │   - React 18 SPA (Compiled Vite Bundle in /frontend/dist)              │
-│   - WebAudio streaming, Generative UI widgets, Session switcher        │
+│   - Streaming Markdown, Generative UI widgets, Session switcher        │
+│   - Dual-Mode: REST (/chat) + Full-Duplex WebSockets (/ws/chat)         │
 └───────────────────────────────────┬────────────────────────────────────┘
                                     │ Single Domain (Same Origin)
                                     ▼
@@ -21,22 +22,24 @@ Before deploying, it is crucial to understand how this application communicates:
 │                   Unified FastAPI Web Service (Container)              │
 │   - Port: $PORT (Dynamic port assigned by host: 8000 / 10000 / 7860)   │
 │   - Static Mount: /           -> Serves frontend/dist/index.html       │
-│   - REST API:     /api/*      -> Sessions, memory inspection, health   │
+│   - REST API:     /chat       -> Direct hackathon tutor endpoint       │
+│   - Health:       /health     -> Rapid warmup probe                    │
+│   - REST API:     /api/*      -> Sessions, memory inspection, ingest   │
 │   - WebSocket:    /ws/chat    -> Real-time token deltas & tool events  │
 │   - Vector Store: ChromaDB    -> Persistent local embeddings           │
 └───────────────────────────────────┬────────────────────────────────────┘
                                     │ HTTPS API Calls
                                     ▼
 ┌────────────────────────────────────────────────────────────────────────┐
-│                 Google Gemini 2.5/3.1 API (Google AI Studio)           │
+│                 Google Gemini 3.1 / 2.5 API (Google AI Studio)         │
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Why Unified Full-Stack Deployment is Recommended
-In this repository, FastAPI is already configured in [`backend/app/main.py`](file:///c:/Users/Dhruvil/Downloads/Nextgenchatbot/backend/app/main.py) to mount and serve the compiled React SPA directly from `frontend/dist`. 
+In this repository, FastAPI is configured in [`backend/app/main.py`](backend/app/main.py) to mount and serve the compiled React SPA directly from `frontend/dist`. 
 
 This provides three massive advantages on free hosting:
-1. **Zero CORS Issues:** REST requests (`/api/*`) and WebSockets (`/ws/chat`) run on the exact same host and protocol (`wss://`).
+1. **Zero CORS Issues:** REST requests (`/chat`, `/api/*`) and WebSockets (`/ws/chat/{session_id}`) run on the exact same host and protocol (`wss://`).
 2. **Single Free Tier Slot:** Free cloud platforms limit users to 1 or 2 free instances. A unified service requires only **one** instance for both frontend and backend.
 3. **Automatic SSL & Secure WebSockets:** Modern browsers block unencrypted `ws://` connections when visiting HTTPS sites. Serving both from one HTTPS domain automatically enables secure `wss://`.
 
@@ -62,16 +65,9 @@ This provides three massive advantages on free hosting:
 4. Copy your key (starts with `AIzaSy...`). *The free tier provides generous rate limits suitable for development and production demos.*
 
 ### Step 2: Push Your Project to GitHub
-Make sure your code is committed to a GitHub repository:
+Make sure your code is committed to your GitHub repository:
 ```bash
-# Initialize git (if not already done)
-git init
-git add .
-git commit -m "Initial commit of NextGen Chatbot"
-
-# Link to your remote GitHub repo and push
 git branch -M main
-git remote add origin https://github.com/<your-username>/<your-repo-name>.git
 git push -u origin main
 ```
 
@@ -82,14 +78,14 @@ git push -u origin main
 Render offers free web services that automatically connect to your GitHub repository and build on every push.
 
 ### Method 1: Using the Pre-configured Blueprint (`render.yaml`)
-We have created a [`render.yaml`](file:///c:/Users/Dhruvil/Downloads/Nextgenchatbot/render.yaml) file in the repository root.
+We have created a [`render.yaml`](render.yaml) file in the repository root.
 
 1. Sign up or log in to [Render.com](https://render.com/).
 2. In the Render Dashboard, click **New +** → **Blueprint**.
-3. Select your GitHub repository (`Nextgenchatbot`).
-4. Render will detect [`render.yaml`](file:///c:/Users/Dhruvil/Downloads/Nextgenchatbot/render.yaml) and automatically configure the service.
+3. Select your GitHub repository (`ScholarMind`).
+4. Render will detect `render.yaml` and automatically configure the service.
 5. In the environment variables prompt, enter your `GOOGLE_API_KEY`.
-6. Click **Apply**. Render will build the Docker container and provide a live URL (e.g. `https://nextgen-ai-chatbot.onrender.com`).
+6. Click **Apply**. Render will build the Docker container and provide a live URL (e.g. `https://scholarmind.onrender.com`).
 
 ---
 
@@ -99,7 +95,7 @@ If you prefer manual setup via Render's Web UI:
 1. In Render Dashboard, click **New +** → **Web Service**.
 2. Select **"Build and deploy from a Git repository"** and choose your repository.
 3. Set the following settings:
-   - **Name:** `nextgen-ai-chatbot` (or your choice)
+   - **Name:** `scholarmind` (or your choice)
    - **Region:** Choose the region closest to you (e.g., Oregon, Frankfurt, Singapore)
    - **Branch:** `main`
    - **Language / Runtime:** **Docker**
@@ -113,8 +109,9 @@ If you prefer manual setup via Render's Web UI:
    | `EMBEDDING_MODEL` | `gemini-embedding-001` |
    | `WORKING_MEMORY_TURNS` | `12` |
    | `CHROMA_PERSIST_DIR` | `/app/chroma_store` |
+   | `GOAL_TOPIC` | `ScholarMind — SDG 4 Quality Education AI Tutor` |
 5. Click **Create Web Service**.
-6. Render will automatically execute the multi-stage [`Dockerfile`](file:///c:/Users/Dhruvil/Downloads/Nextgenchatbot/Dockerfile):
+6. Render will automatically execute the multi-stage [`Dockerfile`](Dockerfile):
    - Stage 1 compiles the React frontend assets with Node 20.
    - Stage 2 installs Python dependencies and sets up Uvicorn.
 7. Once deployed, open your `https://<service-name>.onrender.com` URL.
@@ -148,8 +145,8 @@ Hugging Face Spaces provides **16 GB of RAM and 2 vCPUs completely free**, which
 1. Create a free account at [huggingface.co](https://huggingface.co).
 2. Go to [Hugging Face Spaces](https://huggingface.co/spaces) and click **"Create new Space"**.
 3. Fill in the Space details:
-   - **Space name:** `nextgen-ai-chatbot`
-   - **License:** `mit` or `apache-2.0`
+   - **Space name:** `scholarmind`
+   - **License:** `mit`
    - **Select the Space SDK:** **Docker**
    - **Docker template:** **Blank**
    - **Space hardware:** **CPU basic • 2 vCPU • 16GB RAM (Free)**
@@ -161,58 +158,15 @@ Hugging Face Spaces provides **16 GB of RAM and 2 vCPUs completely free**, which
 6. Push your repository to the Hugging Face Space repository:
    ```bash
    # Add Hugging Face Space as a second git remote
-   git remote add space https://huggingface.co/spaces/<your-username>/<your-space-name>
+   git remote add space https://huggingface.co/spaces/<your-username>/scholarmind
    git push space main --force
    ```
-7. Hugging Face Spaces will build using the root [`Dockerfile`](file:///c:/Users/Dhruvil/Downloads/Nextgenchatbot/Dockerfile). 
-8. Once built, your chatbot is live at `https://<your-username>-<your-space-name>.hf.space` with 16 GB free RAM!
+7. Hugging Face Spaces will build using the root [`Dockerfile`](Dockerfile). 
+8. Once built, your chatbot is live at `https://<your-username>-scholarmind.hf.space` with 16 GB free RAM!
 
 ---
 
-## 6. Deployment Option C: Koyeb (Free Edge Cloud)
-
-Koyeb offers high-performance free micro instances with instant GitHub deployment:
-
-1. Sign up for free at [koyeb.com](https://www.koyeb.com/).
-2. Click **Create App**.
-3. Choose **GitHub** as the deployment method and select your repository.
-4. Set **Builder** to **Dockerfile** (path: `Dockerfile`).
-5. Set the Port to `8000`.
-6. Add Environment Variable `GOOGLE_API_KEY`.
-7. Choose the **Free Eco** instance tier.
-8. Click **Deploy**.
-
----
-
-## 7. Deployment Option D: Decoupled (Vercel Frontend + Render Backend)
-
-If you prefer hosting the React frontend on **Vercel** and the FastAPI backend on **Render**:
-
-### Step 1: Deploy Backend to Render
-Deploy following Section 4 (Render) so you have a live backend URL (e.g. `https://my-backend.onrender.com`).
-
-### Step 2: Configure Frontend for Decoupled Mode
-When decoupled, the frontend must connect to the external backend instead of relative `/api` paths:
-1. In `frontend/.env.production`, specify your backend URL:
-   ```env
-   VITE_BACKEND_URL=https://my-backend.onrender.com
-   ```
-2. In `frontend/vite.config.js` or `frontend/src/hooks/useChatSocket.js`, update the WebSocket target:
-   ```javascript
-   const BACKEND_HOST = import.meta.env.VITE_BACKEND_URL 
-     ? new URL(import.meta.env.VITE_BACKEND_URL).host 
-     : location.host;
-   const wsProtocol = location.protocol === 'https:' ? 'wss' : 'ws';
-   const ws = new WebSocket(`${wsProtocol}://${BACKEND_HOST}/ws/chat`);
-   ```
-3. Push to GitHub and import the `frontend/` folder on [Vercel](https://vercel.com).
-4. Set Build Command: `npm run build`, Output Directory: `dist`.
-
-> **Note:** Unified deployment (Section 4 & 5) is far simpler and avoids having to configure cross-origin WebSocket endpoints.
-
----
-
-## 8. Complete Environment Variables Reference
+## 6. Complete Environment Variables Reference
 
 | Variable | Description | Required? | Default / Example |
 | :--- | :--- | :---: | :--- |
@@ -223,30 +177,34 @@ When decoupled, the frontend must connect to the external backend instead of rel
 | `WORKING_MEMORY_TOKEN_BUDGET` | Max token budget for working memory | No | `3000` |
 | `CONTEXT_CACHE_TTL_SECONDS` | Time-to-live for Gemini Context Cache | No | `3600` |
 | `CHROMA_PERSIST_DIR` | Directory for vector store persistence | No | `./chroma_store` (or `/app/chroma_store`) |
-| `GOAL_TOPIC` | Assistant persona/domain focus | No | `NextGen AI Autonomous Assistant` |
+| `GOAL_TOPIC` | Assistant persona/domain focus | No | `ScholarMind — SDG 4 Quality Education AI Tutor` |
 | `PORT` | Web server port (automatically injected by cloud platforms) | Auto | `8000` / `10000` / `7860` |
 
 ---
 
-## 9. Verification & Health Monitoring
+## 7. Verification & Health Monitoring
 
 Once your deployment is running, verify all subsystems:
 
-### 1. Basic Health Check
-Open in your browser or run:
+### 1. Rapid Warmup Probe
 ```bash
-curl https://<your-app-url>/api/health
+curl https://<your-app-url>/health
 ```
 Expected response:
 ```json
 {
   "status": "ok",
   "model": "gemini-3.1-flash-lite",
-  "topic": "NextGen AI Autonomous Assistant"
+  "topic": "ScholarMind — SDG 4 Quality Education AI Tutor"
 }
 ```
 
-### 2. Operational Telemetry Check
+### 2. Standard API Health Check
+```bash
+curl https://<your-app-url>/api/health
+```
+
+### 3. Operational Telemetry Check
 ```bash
 curl https://<your-app-url>/api/status
 ```
@@ -260,25 +218,28 @@ Expected response:
   "knowledge_chunks": 0
 }
 ```
-*If `status` is `"configuration_required"`, verify that `GOOGLE_API_KEY` is set properly in your cloud dashboard.*
 
-### 3. Full UI and Streaming Test
+### 4. Hackathon Tutor Judging Test
+```bash
+curl -X POST https://<your-app-url>/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Hello tutor! Can you explain the basics of SDG 4?"}'
+```
+
+### 5. Full UI and Streaming Test
 1. Visit `https://<your-app-url>/` in your browser.
 2. Verify the top connection indicator shows **"Connected"** (green indicator).
-3. Send a test message like:
-   ```text
-   Hello! Explain quantum computing in 2 sentences.
-   ```
-4. Confirm that tokens stream smoothly via WebSockets.
-5. Click the **Memory (⌘M)** button in the sidebar to inspect the 3-Tier memory state.
+3. Send a test message in the chat bar.
+4. Confirm that response tokens stream cleanly.
+5. Click the **Memory** button in the sidebar to inspect the 3-Tier memory state and test semantic queries.
 
 ---
 
-## 10. Troubleshooting & FAQs
+## 8. Troubleshooting & FAQs
 
 ### Q: Why did `uvicorn app.main:app` fail with `ModuleNotFoundError: No module named 'app'` locally?
 **Cause:** Python's module import search path (`sys.path`) depends on where you run the command:
-- **If running from the root directory (`Nextgenchatbot/`):**
+- **If running from the repository root:**
   ```bash
   uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload
   # or simply:
@@ -294,12 +255,12 @@ Expected response:
 **Solution:** Render spins down free web services after 15 minutes of inactivity. The first request after spin-down takes ~30–45 seconds.  
 To prevent spin-down for critical demos:
 1. Sign up for a free account at [cron-job.org](https://cron-job.org) or [UptimeRobot](https://uptimerobot.com/).
-2. Create an HTTP monitor that pings your `/api/health` URL every 10–12 minutes.
+2. Create an HTTP monitor that pings your `/health` URL every 10–12 minutes.
 3. This keeps the instance warm during your active hours without incurring any costs.
 
 ### Q: Does ChromaDB data persist after server restart on free tiers?
 **Answer:**
-- On Render and Koyeb free tiers, the local filesystem is ephemeral (it resets on new deployments or service restarts).
+- On Render and Koyeb free tiers, the local container filesystem is ephemeral (it resets on new deployments or service restarts).
 - In-memory working sessions and sliding memory will re-initialize cleanly.
 - If you need persistent document uploads across restarts on the free tier:
   1. Use **Hugging Face Spaces**, which provides persistent local disk.
@@ -309,5 +270,5 @@ To prevent spin-down for critical demos:
 **Check:**
 1. Ensure your browser URL is loaded over `https://`.
 2. Inspect browser DevTools (F12) → **Console** and **Network** → **WS**.
-3. Verify that the WebSocket URL matches `wss://<your-domain>/ws/chat`.
+3. Verify that the WebSocket URL matches `wss://<your-domain>/ws/chat/<session-id>`.
 4. Ensure your cloud provider supports WebSockets (Render, Hugging Face Spaces, and Koyeb support them natively).
