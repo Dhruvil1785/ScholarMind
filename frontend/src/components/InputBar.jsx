@@ -20,8 +20,8 @@ const MODELS = [
     desc: 'Lightweight, ultra-low latency & responsive reasoning',
   },
   {
-    id: 'gemini-2.5-flash',
-    name: 'Gemini 2.5 Flash',
+    id: 'gemini-3.5-flash',
+    name: 'Gemini 3.5 Flash',
     badge: 'Fast',
     badgeColor: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
     desc: 'High-speed multimodal reasoning & interactive dialogue',
@@ -33,13 +33,6 @@ const MODELS = [
     badgeColor: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
     desc: 'State-of-the-art multimodal reasoning with thinking depth',
   },
-  {
-    id: 'gemini-2.5-pro',
-    name: 'Gemini 2.5 Pro',
-    badge: 'Pro',
-    badgeColor: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
-    desc: 'Complex analysis, architectural synthesis & deep code logic',
-  },
 ]
 
 export default function InputBar({ onSend, disabled = false }) {
@@ -49,7 +42,7 @@ export default function InputBar({ onSend, disabled = false }) {
   const textareaRef = useRef(null)
   const menuRef = useRef(null)
 
-  const activeModelId = state.model || 'gemini-2.5-flash'
+  const activeModelId = state.model || 'gemini-3.1-flash-lite'
   const activeModel = MODELS.find((m) => m.id === activeModelId) || MODELS[0]
 
   const handleSend = useCallback(() => {
@@ -104,10 +97,10 @@ export default function InputBar({ onSend, disabled = false }) {
   const canSend = !disabled && text.trim().length > 0
 
   return (
-    <div className="border-t border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md pb-4 pt-2 transition-colors">
+    <div className="w-full pb-4 pt-1 transition-colors bg-transparent">
       <div className="w-full max-w-3xl mx-auto px-4">
-        {/* Floating rounded capsule */}
-        <div className="relative flex flex-col p-2.5 rounded-2xl bg-slate-100/90 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 shadow-sm focus-within:border-blue-400 dark:focus-within:border-blue-500/50 focus-within:bg-white dark:focus-within:bg-slate-900 transition-all duration-150">
+        {/* Floating rounded card form */}
+        <div className="relative flex flex-col p-3 rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-md shadow-slate-200/40 dark:shadow-black/40 focus-within:border-indigo-400 dark:focus-within:border-indigo-500/60 focus-within:ring-2 focus-within:ring-indigo-500/10 transition-all duration-150">
           
           {/* Textarea */}
           <textarea
@@ -117,13 +110,13 @@ export default function InputBar({ onSend, disabled = false }) {
             onChange={handleChange}
             onKeyDown={handleKeyDown}
             disabled={disabled}
-            placeholder={disabled ? 'Gemini is thinking…' : 'Message Gemini…'}
+            placeholder={disabled ? 'ScholarMind is thinking…' : 'Message ScholarMind…'}
             rows={1}
             className="w-full bg-transparent border-none text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 text-sm px-2 py-1 focus:outline-none resize-none leading-relaxed max-h-40 min-h-[38px]"
           />
 
-          {/* Bottom Actions Bar */}
-          <div className="flex items-center justify-between pt-2 mt-1 border-t border-slate-200/50 dark:border-slate-800/60">
+          {/* Bottom Actions Bar — seamless, no partition line */}
+          <div className="flex items-center justify-between pt-2">
             {/* Left: Embedded Custom Model Selector */}
             <div className="relative" ref={menuRef}>
               <button
@@ -234,7 +227,7 @@ export default function InputBar({ onSend, disabled = false }) {
 
         <div className="flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500 mt-2 px-1">
           <span>Shift+Enter for newline</span>
-          <span>Topic Grounded · 3-Tier Memory</span>
+          <span>Quality Education · Adaptive AI Tutor</span>
         </div>
       </div>
     </div>

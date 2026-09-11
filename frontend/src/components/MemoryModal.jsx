@@ -70,19 +70,24 @@ export default function MemoryModal({ isOpen, onClose, sessionId }) {
     setIngestStatus('Uploading and chunking document…')
     const formData = new FormData()
     formData.append('file', file)
+    formData.append('files', file)
     try {
       const res = await fetch('/api/ingest', {
         method: 'POST',
         body: formData,
       })
+      const data = await res.json().catch(() => ({}))
       if (res.ok) {
-        const data = await res.json()
-        setIngestStatus(`✓ Successfully ingested "${file.name}" (${data.chunks || data.chunk_count || 1} chunks created).`)
+        const count = data.chunks_ingested ?? data.chunks ?? data.chunk_count ?? 1
+        setIngestStatus(`✓ Successfully ingested "${file.name}" (${count} chunks indexed in vector store).`)
       } else {
-        setIngestStatus('Failed to ingest file.')
+        setIngestStatus(`⚠️ Ingestion failed: ${data.detail || res.statusText || 'Bad Request'}`)
       }
     } catch (err) {
       setIngestStatus(`Error: ${err.message}`)
+    } finally {
+      // Reset input value so user can upload another or same file
+      e.target.value = ''
     }
   }
 
@@ -90,11 +95,12 @@ export default function MemoryModal({ isOpen, onClose, sessionId }) {
     setIngestStatus('Scanning and indexing data/goal_materials/…')
     try {
       const res = await fetch('/api/ingest/dir', { method: 'POST' })
+      const data = await res.json().catch(() => ({}))
       if (res.ok) {
-        const data = await res.json()
-        setIngestStatus(`✓ Directory indexed: ${data.total_chunks || data.chunks_indexed || 0} chunks added to vector memory.`)
+        const count = data.chunks_ingested ?? data.total_chunks ?? data.chunks_indexed ?? 0
+        setIngestStatus(`✓ Directory indexed: ${count} semantic chunks added to vector memory.`)
       } else {
-        setIngestStatus('Failed to ingest directory.')
+        setIngestStatus(`⚠️ Ingestion failed: ${data.detail || res.statusText || 'Bad Request'}`)
       }
     } catch (err) {
       setIngestStatus(`Error: ${err.message}`)

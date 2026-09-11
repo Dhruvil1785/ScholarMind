@@ -6,26 +6,18 @@
  * Note: Model selection is intentionally located inside the chatbox, NOT in this header.
  */
 import React from 'react'
-import { RotateCcw, PanelLeft, Brain, Monitor, Sun, Moon } from 'lucide-react'
+import { PanelLeft, Brain, Monitor, Sun, Moon } from 'lucide-react'
 import { useChatContext, Actions } from '../context/ChatContext'
-
-const STATUS_LABELS = {
-  open:       'Connected',
-  connecting: 'Connecting…',
-  closed:     'Disconnected',
-  error:      'Error',
-}
+import { ScholarMindIcon } from './ScholarMindLogo'
 
 export default function SessionHeader({
-  connectionStatus,
-  onReset,
   sidebarOpen,
   onToggleSidebar,
   onOpenMemory,
 }) {
   const { state, dispatch } = useChatContext()
   const activeSession = state.sessions.find(s => s.id === state.sessionId)
-  const threadTitle = activeSession?.title || 'Conversational Workspace'
+  const threadTitle = activeSession?.title || 'ScholarMind — AI Learning Tutor'
   const currentTheme = state.theme || 'system'
 
   const setTheme = (theme) => {
@@ -33,8 +25,8 @@ export default function SessionHeader({
   }
 
   return (
-    <header className="sticky top-0 z-20 flex items-center justify-between px-4 py-3 border-b border-slate-200/80 dark:border-slate-800 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md transition-colors">
-      {/* Left: Sidebar toggle + Thread Title */}
+    <header className="sticky top-0 z-20 flex items-center justify-between px-4 sm:px-6 py-3.5 bg-transparent backdrop-blur-xs transition-colors">
+      {/* Left: Sidebar toggle + Logo + Thread Title */}
       <div className="flex items-center gap-3 min-w-0">
         <button
           id="btn-toggle-sidebar"
@@ -46,12 +38,18 @@ export default function SessionHeader({
           <PanelLeft className="w-4 h-4" />
         </button>
 
+        {!sidebarOpen && (
+          <div className="hidden sm:flex items-center">
+            <ScholarMindIcon size="sm" />
+          </div>
+        )}
+
         <div className="min-w-0">
           <h1 className="text-sm font-semibold text-slate-800 dark:text-slate-100 leading-tight truncate max-w-xs sm:max-w-md">
             {threadTitle}
           </h1>
           <p className="text-[11px] text-slate-400 dark:text-slate-500 leading-tight">
-            NextGen AI · 3-Tier Grounded Architecture
+            ScholarMind · AI Learning Tutor
           </p>
         </div>
       </div>
@@ -106,28 +104,6 @@ export default function SessionHeader({
         >
           <Brain className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
           <span className="font-medium hidden sm:inline">Memory</span>
-        </button>
-
-        {/* Connection status */}
-        <div
-          className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800"
-          title={STATUS_LABELS[connectionStatus]}
-        >
-          <span className={`status-dot status-dot-${connectionStatus}`} />
-          <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300 hidden md:inline">
-            {STATUS_LABELS[connectionStatus]}
-          </span>
-        </div>
-
-        {/* Reset conversation */}
-        <button
-          id="reset-session-btn"
-          onClick={onReset}
-          title="Clear current dialogue (⌘K)"
-          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border border-transparent hover:border-slate-200 dark:hover:border-slate-700 cursor-pointer"
-        >
-          <RotateCcw className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline font-medium">Clear</span>
         </button>
       </div>
     </header>

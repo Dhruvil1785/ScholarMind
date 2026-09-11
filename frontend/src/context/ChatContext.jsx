@@ -71,6 +71,7 @@ export const Actions = {
   SET_MODEL:            'SET_MODEL',
   SET_TEMPERATURE:      'SET_TEMPERATURE',
   SET_THEME:            'SET_THEME',
+  UPDATE_MESSAGE:       'UPDATE_MESSAGE',  // patch any fields on a message by id
 }
 
 function chatReducer(state, action) {
@@ -195,6 +196,26 @@ function chatReducer(state, action) {
           m.id === action.messageId ? { ...m, status: action.status } : m
         )
       }
+
+      nextState = { ...state, messages: newMessages, sessions: updatedSessions }
+      break
+    }
+
+    case Actions.UPDATE_MESSAGE: {
+      // Patch arbitrary fields on a message by id (used by REST /chat hook)
+      const targetSid = action.sessionId || state.sessionId
+      const patchMsg = (m) =>
+        m.id === action.id ? { ...m, ...action.patch } : m
+
+      const updatedSessions = state.sessions.map(s =>
+        s.id === targetSid
+          ? { ...s, messages: s.messages.map(patchMsg), updatedAt: Date.now() }
+          : s
+      )
+      const newMessages =
+        targetSid === state.sessionId
+          ? state.messages.map(patchMsg)
+          : state.messages
 
       nextState = { ...state, messages: newMessages, sessions: updatedSessions }
       break

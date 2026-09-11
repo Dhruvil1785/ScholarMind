@@ -48,9 +48,8 @@ def print_banner(host: str, port: int):
     print("  Press Ctrl+C to terminate the application.\n")
 
 def main():
-    host = os.getenv("HOST", "127.0.0.1")
-    port = int(os.getenv("PORT", "8000"))
-    is_dev = os.getenv("ENV", "development").lower() == "development"
+    host = "127.0.0.1"
+    port = 8000
     
     ensure_frontend_built()
     print_banner(host, port)
@@ -60,7 +59,7 @@ def main():
         "backend.app.main:app",
         host=host,
         port=port,
-        reload=is_dev,
+        reload=True,
         log_level="info"
     )
 

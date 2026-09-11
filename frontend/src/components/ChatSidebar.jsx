@@ -11,6 +11,7 @@
 import React from 'react'
 import { Plus, MessageSquare, Trash2, PanelLeftClose, Sparkles, Brain, Sliders, Command } from 'lucide-react'
 import { useChatContext, Actions } from '../context/ChatContext'
+import ScholarMindLogo from './ScholarMindLogo'
 
 export default function ChatSidebar({
   isOpen,
@@ -45,12 +46,7 @@ export default function ChatSidebar({
       >
         {/* Header / Brand + Close button */}
         <div className="flex items-center justify-between p-3.5 border-b border-slate-200/80 dark:border-slate-800">
-          <div className="flex items-center gap-2 font-semibold text-slate-800 dark:text-slate-100 text-sm">
-            <div className="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-xs">
-              <Sparkles className="w-4 h-4" />
-            </div>
-            <span>NextGen AI</span>
-          </div>
+          <ScholarMindLogo size="sm" showTagline={false} />
 
           <button
             onClick={onToggle}

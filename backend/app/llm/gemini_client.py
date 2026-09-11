@@ -18,6 +18,27 @@ logger = logging.getLogger(__name__)
 cfg = get_settings()
 
 
+def _is_rate_limit_or_fallback_error(exc: Exception) -> bool:
+    """Detect rate limits (429, quota), resource exhaustion, or model unavailable/not found."""
+    code = getattr(exc, "code", None) or getattr(exc, "status_code", None)
+    if code in (404, 429, 503):
+        return True
+    err_str = str(exc).lower()
+    keywords = [
+        "429",
+        "rate limit",
+        "resource_exhausted",
+        "quota",
+        "too many requests",
+        "exhausted",
+        "not found",
+        "404",
+        "unavailable",
+        "not supported",
+    ]
+    return any(kw in err_str for kw in keywords)
+
+
 def _is_retryable_error(exc: Exception) -> bool:
     """Determine whether an error is transient (e.g. 503 unavailable, 429 rate limit)."""
     code = getattr(exc, "code", None) or getattr(exc, "status_code", None)
@@ -117,18 +138,21 @@ class GeminiClient:
 
         loop = asyncio.get_event_loop()
 
+        FALLBACK_MODEL = "gemini-3.1-flash-lite"
+        has_fallen_back = False
+
         for attempt in range(1, max_retries + 1):
             chunks_yielded = 0
             start_time = time.perf_counter()
             try:
-                def make_stream():
+                def make_stream(cur_model):
                     return self._client.models.generate_content_stream(
-                        model=selected_model,
+                        model=cur_model,
                         contents=contents,
                         config=gen_config,
                     )
 
-                stream = await loop.run_in_executor(None, make_stream)
+                stream = await loop.run_in_executor(None, make_stream, selected_model)
 
                 def get_next(iterator):
                     try:
@@ -151,17 +175,28 @@ class GeminiClient:
 
             except Exception as exc:
                 latency = time.perf_counter() - start_time
+
+                # Automatic fallback on rate limit / resource exhaustion / model error before chunks yielded
+                if chunks_yielded == 0 and not has_fallen_back and selected_model != FALLBACK_MODEL and _is_rate_limit_or_fallback_error(exc):
+                    logger.warning(
+                        "gemini_client.rate_limit_fallback: model '%s' encountered rate limit or error (%s). Seamlessly falling back to '%s'.",
+                        selected_model, exc, FALLBACK_MODEL
+                    )
+                    selected_model = FALLBACK_MODEL
+                    has_fallen_back = True
+                    continue
+
                 if chunks_yielded > 0 or attempt == max_retries or not _is_retryable_error(exc):
                     logger.error(
-                        "gemini_client.stream_error (attempt %d/%d): %s (latency=%.2fs)",
-                        attempt, max_retries, exc, latency
+                        "gemini_client.stream_error (attempt %d/%d, model=%s): %s (latency=%.2fs)",
+                        attempt, max_retries, selected_model, exc, latency
                     )
                     raise
 
                 delay = base_delay * (2 ** (attempt - 1)) + random.uniform(0.1, 0.4)
                 logger.warning(
-                    "gemini_client.transient_error (attempt %d/%d) — retry in %.2fs: %s",
-                    attempt, max_retries, delay, exc
+                    "gemini_client.transient_error (attempt %d/%d, model=%s) — retry in %.2fs: %s",
+                    attempt, max_retries, selected_model, delay, exc
                 )
                 await asyncio.sleep(delay)
 

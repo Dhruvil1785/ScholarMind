@@ -30,7 +30,7 @@ from backend.app.deps import (
     dep_long_term_memory,
     dep_working_memory,
 )
-from backend.app.routes import chat, chat_ws, ingest, session
+from backend.app.routes import chat, chat_ws, ingest, session, tutor
 
 logging.basicConfig(
     level=logging.INFO,
@@ -59,8 +59,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="NextGen AI Minimalist Assistant",
-    description="Utilitarian editorial conversational interface with 3-tier memory and native tool execution",
+    title="ScholarMind — AI Learning Tutor",
+    description="Adaptive AI Learning Tutor supporting Quality Education with personalized pacing and assessment",
     version="2.0.0",
     lifespan=lifespan,
 )
@@ -75,6 +75,7 @@ app.add_middleware(
 )
 
 # Include API routers
+app.include_router(tutor.router)          # POST /chat  (hackathon judging endpoint)
 app.include_router(chat.router)
 app.include_router(chat_ws.router)
 app.include_router(session.router)
@@ -101,7 +102,7 @@ async def get_status():
 
 
 @app.get("/api/health")
-async def health():
+async def health_api():
     return {
         "status": "ok",
         "model": cfg.gemini_model,

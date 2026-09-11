@@ -43,3 +43,7 @@ class SessionDeleteResponse(BaseModel):
 class IngestResponse(BaseModel):
     chunks_ingested: int
     message: str
+    chunks: Optional[int] = None
+    chunk_count: Optional[int] = None
+    total_chunks: Optional[int] = None
+    chunks_indexed: Optional[int] = None
