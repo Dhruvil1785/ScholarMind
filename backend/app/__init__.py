@@ -1,0 +1,12 @@
+"""
+backend/app/__init__.py
+"""
+import sys
+from pathlib import Path
+
+# Ensure both 'backend.app' (when running from root) and 'app' (when running from backend/) resolve
+_backend_dir = Path(__file__).resolve().parent.parent
+_root_dir = _backend_dir.parent
+for _p in (str(_root_dir), str(_backend_dir)):
+    if _p not in sys.path:
+        sys.path.insert(0, _p)

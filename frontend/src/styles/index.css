@@ -1,0 +1,95 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Base resets ─────────────────────────────────────────────── */
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-slate-50 text-slate-900 min-h-screen selection:bg-blue-100 selection:text-blue-900;
+  }
+
+  /* Scrollbar styling — modern light theme */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 rounded-full hover:bg-slate-400;
+  }
+}
+
+/* ── Component utilities ─────────────────────────────────────── */
+@layer components {
+  /* Chat container — max-width 780px, centered */
+  .chat-column {
+    @apply w-full max-w-3xl mx-auto px-4;
+  }
+
+  /* Glass / subtle card */
+  .glass-card {
+    @apply bg-white/80 border border-slate-200/80 shadow-sm backdrop-blur-sm rounded-2xl;
+  }
+
+  /* Streaming cursor blink */
+  .streaming-cursor::after {
+    content: '▍';
+    @apply text-blue-600 animate-blink ml-0.5 inline-block;
+  }
+
+  /* Message bubble base */
+  .bubble {
+    @apply rounded-2xl px-4 py-3 text-sm leading-relaxed max-w-[85%] break-words shadow-sm;
+  }
+
+  .bubble-user {
+    @apply bubble bg-blue-600 text-white rounded-br-sm shadow-blue-500/10;
+  }
+
+  .bubble-assistant {
+    @apply bubble bg-white text-slate-800 border border-slate-200/80 rounded-bl-sm shadow-sm;
+  }
+
+  /* Tool call pill */
+  .tool-pill {
+    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full
+           bg-amber-50 border border-amber-200 text-amber-800
+           text-xs font-medium shadow-sm;
+  }
+
+  /* Connection status dots */
+  .status-dot {
+    @apply w-2 h-2 rounded-full flex-shrink-0;
+  }
+  .status-dot-open       { @apply status-dot bg-emerald-500 shadow-sm shadow-emerald-500/50; }
+  .status-dot-connecting { @apply status-dot bg-amber-500 animate-pulse; }
+  .status-dot-closed     { @apply status-dot bg-slate-400; }
+  .status-dot-error      { @apply status-dot bg-rose-500; }
+
+  /* Input bar */
+  .chat-input {
+    @apply w-full bg-white border border-slate-200 rounded-2xl px-4 py-3.5
+           text-slate-900 placeholder-slate-400 text-sm shadow-sm
+           focus:outline-none focus:ring-2 focus:ring-blue-500/30
+           focus:border-blue-500 transition-all resize-none;
+  }
+
+  /* Send button */
+  .send-btn {
+    @apply flex-shrink-0 w-10 h-10 flex items-center justify-center
+           rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white
+           transition-all shadow-sm shadow-blue-500/20 disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+}

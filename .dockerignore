@@ -1,0 +1,31 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+ENV/
+
+# Node
+frontend/node_modules/
+node_modules/
+frontend/dist/
+
+# Chroma & local state
+chroma_store/
+backend/chroma_store/
+.env
+backend/.env
+
+# IDE & OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
